@@ -1,5 +1,5 @@
 from source import app
-from flask import request, render_template, jsonify
+from flask import request, render_template, jsonify, redirect
 
 from os import listdir
 import os
@@ -9,74 +9,69 @@ from typing import List, Callable, Any, Iterable, ByteString
 
 
 @app.route('/', methods=['GET'])
-@app.route('/index', methods=['GET'])
-def index():
-    files_directory = app.config['FILES_DIRECTORY']
-    #programs = [file.replace(' ', '_') for file in os.listdir(files_directory)][0]
-    programs = os.listdir(files_directory)
-
-    if not programs or len(programs) == 0:
-        raise FileNotFoundError('Could not find directory {dir}'.format(
-            dir=app.config['FILES_DIRECTORY']))
-
-    tags = []
-
-    for program in programs:
-        with open(os.path.join(os.path.join(files_directory, program), app.config['TAGS_FILE']), 'r') as tags_file:
-            tags_data = tags_file.readlines()
-            for tag in tags_data:
-                tag = tag.replace('\n', '')
-                if tag not in tags:
-                    tags.append(tag)
-
-    return render_template('index.html', names=programs, tags=tags)
+def main():
+    return render_programs_template()
 
 @app.route('/search', methods=['GET'])
 def search():
     search_by = request.args.get('search_by', type=str)
+    values = request.args.getlist('value')
+    return render_programs_template(search_by=search_by, values=values)
+
+def render_programs_template(search_by : str = None, values : List[ByteString] = None) -> List[dict]:    
+    programs_to_show = []
+    found_programs = []
+
+    if not search_by or not values:
+        return render_programs_template('all', [''])
 
     if search_by == 'tags':
-        tags = request.args.getlist('value')
-        programs = [name for tag, name in get_files_by_tags(tags).items()]
-        if not programs:
-            return 'We are sorry, no programs were found :('
-        programs = programs[0]
-        return '<br>'.join(programs)
-
+        found_programs = [name for tag, name in get_files_by_tags(values).items()]
+        if found_programs:
+            found_programs = found_programs[0]
     elif search_by == 'name':
-        name = request.args.get('value', type=str)
-        programs = get_files_by_name(name)
-        if not programs:
-            return 'We are sorry, no programs were found :('
-        return '<br>'.join(programs)
-
+        found_programs = get_files_by_name(values[0])
     elif search_by == 'all':
-        values = request.args.getlist('value')
-        programs = [name for tag, name in get_files_by_tags(values).items()]
-        if programs:
-            programs = programs[0]
-
-        for value in values:
-            programs += get_files_by_name(value)
-        
-        if not programs:
-            return 'We are sorry, no programs were found :('
-        programs = list(dict.fromkeys(programs))
-        return '<br>'.join(programs)
-
+        found_programs = [name for tag, name in get_files_by_tags(values).items()]
+        if found_programs:
+            found_programs = found_programs[0]
+        found_programs += get_files_by_name(values[0])
     else:
-        return 'Invalid search_by argument, optional values: [tags/name]'
+        return render_template('new_index.html', programs=[], programs_len=0)
 
+    if found_programs is None:
+        print("Here?")
+        return render_template('new_index.html', programs=[], programs_len=0)
+        
+    files_directory = app.config['FILES_DIRECTORY']
+
+    for program in found_programs:
+        program_dict = {}
+        program_dict['name'] = program
+        program_dict['icon'] = os.path.join(os.path.join("static/files", program), app.config['ICON_FILE'])
+        if not os.path.isfile(program_dict['icon']):
+            program_dict['icon'] = app.config['DEFAULT_ICON_PATH']
+        program_dict['versions'] = sorted(listdir(os.path.join(os.path.join(files_directory, program), app.config['VERSIONS_DIRECTORY'])))
+        program_dict['tags'] = list()
+        with open(os.path.join(os.path.join(files_directory, program), app.config['TAGS_FILE']), 'r') as tags_file:
+            tags_data = tags_file.readlines()
+            for tag in tags_data:
+                tag = tag.replace('\n', '')
+                if tag not in program_dict['tags']:
+                    program_dict['tags'].append(tag)
+        sorted(program_dict['tags'])
+        if program_dict not in programs_to_show:
+            programs_to_show.append(program_dict)
+
+    return render_template('new_index.html', programs=programs_to_show, programs_len=len(programs_to_show))    
 
 def get_files_by_tags(tags: Iterable[ByteString]) -> dict:
     files_directory = app.config['FILES_DIRECTORY']
     programs = os.listdir(files_directory)
+    ret_tags = {}
 
     if not programs or len(programs) == 0:
-        raise FileNotFoundError('Could not find directory {dir}'.format(
-            dir=app.config['FILES_DIRECTORY']))
-
-    ret_tags = {}
+        return ret_tags
 
     for search_tag in tags:
         for program in programs:
@@ -98,12 +93,10 @@ def get_files_by_tags(tags: Iterable[ByteString]) -> dict:
 def get_files_by_name(program_name: ByteString) -> list:
     files_directory = app.config['FILES_DIRECTORY']
     programs = os.listdir(files_directory)
+    ret_list = list()
 
     if not programs or len(programs) == 0:
-        raise FileNotFoundError('Could not find directory {dir}'.format(
-            dir=app.config['FILES_DIRECTORY']))
-
-    ret_list = list()
+        return ret_list
 
     for program in programs:
         if program_name in program:

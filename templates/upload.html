@@ -1,0 +1,82 @@
+<html>
+
+<head>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" id="bootstrap-css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <link rel="icon" href="{{ url_for('static', filename='site_icon.png') }}">
+
+    <!-- Taggle.js stuff -->
+    <link type="text/css" href="{{ url_for('static', filename='css/twilight.css') }}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/taggle.css') }}">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="active" href="/">Home</a> | 
+                <a class="active" href="/upload">Upload</a> |
+                <a class="active" href="/about">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="team" class="pb-5">
+        <div class="container">
+            <h5 class="section-title h1">UPLOAD NEW PROGRAM</h5>
+            <form method=post enctype=multipart/form-data>
+              
+              <!-- Name input -->
+              <div class="input-group">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-info-sign"></i></span>
+                <input id="name" type="text" class="form-control" name="name" placeholder="Name">
+              </div>
+
+              <!-- File input -->
+              <div class="input-group">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-file"></i></span>
+                <input id="file" type="file" class="form-control" name="file" placeholder="File">
+              </div>  
+
+              <!-- Icon input -->
+              <div class="form-group row">
+                <p><span class="glyphicon glyphicon-picture"></span> Icon</p>
+                <div class="col-10">
+                  <input id="icon" type="file" class="form-control" name="icon">
+                </div>
+              </div>  
+
+              <!-- Version input -->
+              <div class="input-group">
+                  <span class="input-group-addon"><i class="glyphicon glyphicon-folder-open"></i></span>
+                  <input id="version" type="text" class="form-control" name="version" placeholder="Version">
+              </div>
+
+              <!-- Tags input -->
+              <p><span class="glyphicon glyphicon-tags"></span> Tags</p>
+              <div class="input textarea clearfix tags" name="tags" id="tags"></div>           
+
+
+              <!-- Upload button -->
+              <input type=submit value=Upload>
+            </form>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/jquery-1.10.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rainbow-custom.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/taggle.min.js') }}"></script>
+
+    <script>
+        var tagsInput = new Taggle('tags', {
+          duplicateTagClass: 'bounce'
+        });
+    </script>
+</body>
+
+</html>

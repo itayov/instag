@@ -1,8 +1,10 @@
 from flask import Flask
+from flask_bootstrap import Bootstrap
 from source.__config__ import ApplicationConfiguration
 
-app = Flask(__name__, template_folder='./../templates/')
+app = Flask(__name__, template_folder='./../templates/', static_folder='./../static')
 app.config.from_object(ApplicationConfiguration)
 
-from source import index
-from source import upload
+bootstrap = Bootstrap(app)
+
+from source import index, upload, download, about
